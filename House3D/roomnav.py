@@ -14,10 +14,10 @@ import pickle
 
 import gym
 from gym import spaces
-from .house import House
-from .core import Environment, MultiHouseEnv
-from . import objrender
-from .objrender import RenderMode
+from house import House
+from core import Environment, MultiHouseEnv
+import objrender
+from objrender import RenderMode
 
 __all__ = ['RoomNavTask']
 
@@ -426,11 +426,11 @@ class RoomNavTask(gym.Env):
         return self.env.debug_render()
 
 if __name__ == '__main__':
-    from .common import load_config
+    from common import load_config
 
     api = objrender.RenderAPI(
             w=400, h=300, device=0)
-    cfg = load_config('config.json')
+    cfg = load_config('../tests/config.json')
 
     houses = ['00065ecbdd7300d35ef4328ffe871505',
     'cf57359cd8603c3d9149445fb4040d90', '31966fdc9f9c87862989fae8ae906295', 'ff32675f2527275171555259b4a1b3c3',

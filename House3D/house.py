@@ -174,6 +174,7 @@ class House(object):
         self.all_obj = [node for node in level['nodes'] if node['type'].lower() == 'object']
         self.all_rooms = [node for node in level['nodes'] if (node['type'].lower() == 'room') and ('roomTypes' in node)]
         self.all_roomTypes = [room['roomTypes'] for room in self.all_rooms]
+        print(self.all_roomTypes)
         self.all_desired_roomTypes = []
         self.default_roomTp = None
         for roomTp in ALLOWED_TARGET_ROOM_TYPES:
@@ -482,12 +483,17 @@ class House(object):
     """
     returns a random location of a given room type
     """
-    def getRandomLocation(self, roomTp):
-        roomTp = roomTp.lower()
-        assert roomTp in ALLOWED_TARGET_ROOM_TYPES, '[House] room type <{}> not supported!'.format(roomTp)
+    def getRandomLocation(self, roomTp, return_grid_loc=False, mixedTp=False):
+        if type(roomTp) is str:
+            roomTp = roomTp.lower()
+        else: # type is list - multiple room types
+            roomTp = [x.lower() for x in roomTp]
         # get list of valid locations within the room bounds
         locations = []
-        rooms = self._getRooms(roomTp)
+        if mixedTp:
+            rooms = self._getRoomsMixed(roomTp)
+        else:
+            rooms = self._getRooms(roomTp)
         for room in rooms:
             room_locs = self._getValidRoomLocations(room)
             if room_locs and len(room_locs) > 0:
@@ -497,6 +503,9 @@ class House(object):
         result = None
         if len(locations) > 0:
             idx = np.random.choice(len(locations))
+            # Return this for coordinates to match graph nodes
+            if return_grid_loc:
+                return locations[idx][0], locations[idx][1]
             result = self.to_coor(locations[idx][0], locations[idx][1], True)
 
         return result
@@ -753,7 +762,6 @@ class House(object):
             return ret
         return ret / self.maxConnDist
 
-
     """
     returns all rooms of a given type
     """
@@ -764,6 +772,17 @@ class House(object):
         ]
         return rooms
 
+    """
+    returns all rooms of a given (potentially mixed) type
+    """
+    def _getRoomsMixed(self, roomTp):
+        rooms = [
+            r for r in self.all_rooms
+            if all([any(_equal_room_tp(tp, ctTp) for ctTp in r['roomTypes'])
+                    for tp in roomTp])
+                and len(r['roomTypes']) > 0
+        ]
+        return rooms
 
     """
     return whether or not a given room type exists in the house
